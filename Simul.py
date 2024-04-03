@@ -1,7 +1,6 @@
 import pygame
 import random
 import math
-
 # Setting up colors
 white = (255, 255, 255)
 black = (0, 0, 0)
@@ -11,6 +10,8 @@ fire_color = (255, 117, 0)
 wood_color = (112, 40, 9)
 steam_color = (242, 233, 233)
 lava_color = (237, 76, 31)
+rock_color = (125, 109, 97)
+oil_color=(173, 168, 142)
 # Initializing pygame
 pygame.init()
 W, H = 400, 400
@@ -33,10 +34,12 @@ density=dict()
 density['sand']=5
 density['water']=4
 density['fire']=1
-density['wood']=3
+density['wood']=10
 density['steam']=0
 density['lava']=6
 density['void']=1
+density['rock']=10
+density['oil'] = 3
 
 
 class Cell:
@@ -66,6 +69,10 @@ def color_mapper(type):
         return lava_color
     elif type == 'wood':
         return wood_color
+    elif type == 'rock':
+        return rock_color
+    elif type == 'oil':
+        return oil_color
 
 
 class Grid:
@@ -86,12 +93,12 @@ class Grid:
         self.cell[a[1]][a[0]] = self.cell[b[1]][b[0]]
         self.cell[b[1]][b[0]] = temp
     
-    def set(self, x, y, type, lifetime=0):
-        for y1 in range(y - self.radius, y + self.radius):
-            for x1 in range(x - self.radius, x + self.radius):
-                
-                    self.cell[y1][x1] = Cell(type, vary_color(color_mapper(type)))
-
+    def set(self, x, y, type,lifetime=0):
+        # self.cell[y][x] = Cell(type,vary_color(color_mapper(type)),lifetime)
+        for y1 in range(y-self.radius,y+self.radius):
+            for x1 in range(x-self.radius,x+self.radius):
+                self.cell[y1][x1] = Cell(type,vary_color(color_mapper(type)))
+        
     def get_cell(self, x, y):
         return self.cell[y][x]
 
@@ -109,6 +116,21 @@ class Grid:
         grid_y = y // self.cell_size
         if 0 <= grid_x < self.width and 0 <= grid_y < self.height:
             self.set(grid_x, grid_y, type)
+    
+    
+    def update_oil(self,x,y):
+        mylist = [0,1]
+        a = random. choice(mylist)
+        if (y!=self.height-1) and (x!=0) and (x!=self.width-1):
+            below = self.get_cell(x,y+1)
+            right = self.get_cell(x+1,y)
+            left = self.get_cell(x-1,y)
+            if below.type != 'sand' and below.type!='rock' and below.type!='oil':
+                self.swap((x,y),(x,y+1))
+            elif left.type != 'sand' and left.type!='rock' and left.type!='oil' and a==0:
+                self.swap((x,y),(x-1,y))
+            elif right.type != 'sand' and right.type!='rock' and right.type!='oil' and a==1:
+                self.swap((x,y),(x+1,y))
             
     def update_sand(self,x,y):
         if (y!=self.height-1) and (x!=0) and (x!=self.width-1):
@@ -121,7 +143,6 @@ class Grid:
                 self.swap((x,y),(x-1,y+1))
             elif below_right.color==black:
                 self.swap((x,y),(x+1,y+1))
-    
     def update_water(self,x,y):
         mylist = [0,1]
         a = random. choice(mylist)
@@ -129,11 +150,11 @@ class Grid:
             below = self.get_cell(x,y+1)
             right = self.get_cell(x+1,y)
             left = self.get_cell(x-1,y)
-            if below.type == 'void':
+            if below.type =='void':
                 self.swap((x,y),(x,y+1))
-            elif left.type == 'void' and a==0:
+            elif (left.type == 'void' or left.type=='oil') and a==0:
                 self.swap((x,y),(x-1,y))
-            elif right.type == 'void' and a==1:
+            elif (right.type == 'void' or right.type=='oil') and a==1:
                 self.swap((x,y),(x+1,y))
                 
     def update_steam(self,x,y):
@@ -165,28 +186,62 @@ class Grid:
             moves=[(x+fireside,y-1),(x+secside,y-1),(x,y-1)]
             random.shuffle(moves)
             if cell.lifetime>=20:
-                self.cell[y][x] = Cell('steam', vary_color(color_mapper('steam')))
+                self.set(x,y,'steam',0)
             else:
                 if self.get_cell(*(moves[0])).type=='void':
                     self.swap((x,y),moves[0])
+                moves=[(x+fireside,y-1),(x+secside,y-1),(x,y-1),(x+1,y),(x-1,y),(x,y+1),(x+fireside,y+1),(x+secside,y+1)]
+                for move in moves:
+                    if self.get_cell(*move).type=='wood' or self.get_cell(*move).type=='oil':
+                        self.set(*move,'fire',0)
+                    if self.get_cell(*move).type=='water':
+                        self.set(*move,'steam',0)
+                        self.set(x,y,'void',0)
+                    
 
     def update_lava(self,x,y):
         mylist = [0,1]
         a = random. choice(mylist)
         if (y!=self.height-1) and (x!=0) and (x!=self.width-1):
-            below = self.get_cell(x,y+1)
-            right = self.get_cell(x+1,y)
-            left = self.get_cell(x-1,y)
-            top = left = self.get_cell(x,y-1)
-            if below.type == 'void':
-                self.swap((x,y),(x,y+1))
-            elif left.type == 'void' and a==0:
-                self.swap((x,y),(x-1,y))
-            elif right.type == 'void' and a==1:
-                self.swap((x,y),(x+1,y))
-    
+            if self.get_cell(x,y).lifetime >= 500:
+                self.set(x,y,'rock')
+            else:
+                below = self.get_cell(x,y+1)
+                right = self.get_cell(x+1,y)
+                left = self.get_cell(x-1,y)
+                top = self.get_cell(x,y-1)
+                if below.type == 'void':
+                    self.swap((x,y),(x,y+1))
+                elif left.type == 'void' and a==0:
+                    self.swap((x,y),(x-1,y))
+                elif right.type == 'void' and a==1:
+                    self.swap((x,y),(x+1,y))
+                    
+                top = self.get_cell(x,y-1)
+                top_left = self.get_cell(x-1, y-1)
+                top_right = self.get_cell(x+1, y-1)
+                left = self.get_cell(x-1, y)
+                right = self.get_cell(x+1, y)
+                bottom_left = self.get_cell(x-1, y+1)
+                bottom_right = self.get_cell(x+1, y+1)
+                hitbox = [top, top_left, top_right, left, right, below, bottom_left, bottom_right]
+                hb_coords = [(x, y-1), (x+1, y-1), (x+1, y-1), (x-1, y), (x+1, y), (x,y+1), (x-1, y+1), (x+1, y+1)]
+                for i in range(len(hitbox)):
+                    if hitbox[i].type == 'water':
+                        self.set(*hb_coords[i], 'rock')
+                        self.set(x,y, 'steam')
+                    elif hitbox[i].type == 'wood':
+                        self.set(*hb_coords[i], 'fire')
+                    elif hitbox[i].type == 'oil':
+                        self.set(*hb_coords[i], 'fire')
 
-    #This I have updated because I needed a check for dirty flag
+                
+                
+                
+                
+                
+
+            
     def update_pixel(self,x,y):
         self.cell[y][x].lifetime+=1
         if self.get_cell(x,y).dirty_flag == True:
@@ -200,8 +255,10 @@ class Grid:
                 self.update_steam(x,y)
             elif self.get_cell(x,y).type== 'lava':
                 self.update_lava(x,y)
+            elif self.get_cell(x,y).type == 'oil':
+                self.update_oil(x,y)
             if y+1<self.height and self.cell[y][x].lifetime>10:
-                if self.get_cell(x,y).density>self.get_cell(x,y+1).density:
+                if self.get_cell(x,y).density>self.get_cell(x,y+1).density and self.get_cell(x,y).type!='rock' and self.get_cell(x,y).type!='wood':
                     self.swap((x,y),(x,y+1))
                                
     def update_grid(self):
@@ -237,6 +294,7 @@ def main():
         if pressed[pygame.K_f]: draw_type = 'fire'
         if pressed[pygame.K_r]: draw_type = 'steam'
         if pressed[pygame.K_t]: draw_type = 'lava'
+        if pressed[pygame.K_o]: draw_type = 'oil'
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
