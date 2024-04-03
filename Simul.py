@@ -1,7 +1,7 @@
 import pygame
 import random
 
-# Setting up colors
+# Setting up colorss
 white = (255, 255, 255)
 black = (0, 0, 0)
 sand_color = (209, 175, 25)
