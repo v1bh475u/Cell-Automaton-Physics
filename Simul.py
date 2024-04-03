@@ -1,5 +1,6 @@
 import pygame
 import random
+import math
 
 # Setting up colors
 white = (255, 255, 255)
@@ -85,12 +86,11 @@ class Grid:
         self.cell[a[1]][a[0]] = self.cell[b[1]][b[0]]
         self.cell[b[1]][b[0]] = temp
     
-    def set(self, x, y, type,lifetime=0):
-        # self.cell[y][x] = Cell(type,vary_color(color_mapper(type)),lifetime)
-        for y1 in range(y-self.radius,y+self.radius):
-            for x1 in range(x-self.radius,x+self.radius):
-                self.cell[y1][x1] = Cell(type,vary_color(color_mapper(type)))
-        # self.cell[y][x].update_color()
+    def set(self, x, y, type, lifetime=0):
+        for y1 in range(y - self.radius, y + self.radius):
+            for x1 in range(x - self.radius, x + self.radius):
+                
+                    self.cell[y1][x1] = Cell(type, vary_color(color_mapper(type)))
 
     def get_cell(self, x, y):
         return self.cell[y][x]
@@ -143,11 +143,15 @@ class Grid:
             if self.get_cell(x,y).lifetime>=50:
                 self.set(x,y,'void',0)
             else:
+                cell=self.get_cell(x,y)
+                fireside=cell.lastvel
+                secside=-fireside
+                moves=[(x+fireside,y-1),(x+secside,y-1),(x,y-1)]
                 below = self.get_cell(x,y-1)
                 right = self.get_cell(x+1,y)
                 left = self.get_cell(x-1,y)
                 if below.type == 'void':
-                    self.swap((x,y),(x,y-1))
+                    self.swap((x,y),moves[0])
                 elif left.type == 'void' and a==0:
                     self.swap((x,y),(x-1,y))
                 elif right.type == 'void' and a==1:
@@ -161,7 +165,7 @@ class Grid:
             moves=[(x+fireside,y-1),(x+secside,y-1),(x,y-1)]
             random.shuffle(moves)
             if cell.lifetime>=20:
-                self.set(x,y,'steam',0)
+                self.cell[y][x] = Cell('steam', vary_color(color_mapper('steam')))
             else:
                 if self.get_cell(*(moves[0])).type=='void':
                     self.swap((x,y),moves[0])
@@ -180,26 +184,29 @@ class Grid:
                 self.swap((x,y),(x-1,y))
             elif right.type == 'void' and a==1:
                 self.swap((x,y),(x+1,y))
-                
+    
+
+    #This I have updated because I needed a check for dirty flag
     def update_pixel(self,x,y):
         self.cell[y][x].lifetime+=1
-        if self.get_cell(x,y).type=='sand':
-            self.update_sand(x,y)
-        elif self.get_cell(x,y).type=='water':
-            self.update_water(x,y)
-        elif self.get_cell(x,y).type=='fire':
-            self.update_fire(x,y)
-        elif self.get_cell(x,y).type== 'steam':
-            self.update_steam(x,y)
-        elif self.get_cell(x,y).type== 'lava':
-            self.update_lava(x,y)
-        if y+1<self.height and self.cell[y][x].lifetime>10:
-            if self.get_cell(x,y).density>self.get_cell(x,y+1).density:
-                self.swap((x,y),(x,y+1))
+        if self.get_cell(x,y).dirty_flag == True:
+            if self.get_cell(x,y).type=='sand':
+                self.update_sand(x,y)
+            elif self.get_cell(x,y).type=='water':
+                self.update_water(x,y)
+            elif self.get_cell(x,y).type=='fire':
+                self.update_fire(x,y)
+            elif self.get_cell(x,y).type== 'steam':
+                self.update_steam(x,y)
+            elif self.get_cell(x,y).type== 'lava':
+                self.update_lava(x,y)
+            if y+1<self.height and self.cell[y][x].lifetime>10:
+                if self.get_cell(x,y).density>self.get_cell(x,y+1).density:
+                    self.swap((x,y),(x,y+1))
                                
     def update_grid(self):
-        for y in range(self.height-1,-1,-1):
-            for x in range(self.width-1,-1,-1):
+        for y in range(self.height-1):
+            for x in range(self.width-1):
                 self.update_pixel(x,y)
     
     def clear_flags(self):
