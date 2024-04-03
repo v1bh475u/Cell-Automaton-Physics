@@ -25,13 +25,14 @@ def vary_color(color):
     new_b = min(max(b + random.randint(-20, 20), 0), 255)
     return (new_r, new_g, new_b)  # Returning the modified color tuple
 
-density=map()    
-density['sand']=4
-density['water']=2
+density=dict() 
+density['sand']=5
+density['water']=4
 density['fire']=1
 density['wood']=3
 density['steam']=0
-density['lava']=5
+density['lava']=6
+density['void']=1
 
 
 class Cell:
@@ -59,6 +60,8 @@ def color_mapper(type):
         return steam_color
     elif type == 'lava':
         return lava_color
+    elif type == 'wood':
+        return wood_color
 
 
 class Grid:
@@ -172,7 +175,7 @@ class Grid:
                 self.swap((x,y),(x+1,y))
                 
     def update_pixel(self,x,y):
-        self.cell[y][x].lifetime+=1 
+        self.cell[y][x].lifetime+=1
         if self.get_cell(x,y).type=='sand':
             self.update_sand(x,y)
         elif self.get_cell(x,y).type=='water':
@@ -183,6 +186,9 @@ class Grid:
             self.update_steam(x,y)
         elif self.get_cell(x,y).type== 'lava':
             self.update_lava(x,y)
+        if y+1<self.height and self.cell[y][x].lifetime>60:
+            if self.get_cell(x,y).density>self.get_cell(x,y+1).density:
+                self.swap((x,y),(x,y+1))
                                
     def update_grid(self):
         for y in range(self.height-1,-1,-1):
