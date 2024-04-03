@@ -163,9 +163,9 @@ class Grid:
             if cell.lifetime>=20:
                 self.set(x,y,'steam',0)
             else:
-                if self.get_cell(moves[0][0],moves[0][1]).type=='void':
+                if self.get_cell(*(moves[0])).type=='void':
                     self.swap((x,y),moves[0])
-    
+
     def update_lava(self,x,y):
         mylist = [0,1]
         a = random. choice(mylist)
@@ -193,7 +193,7 @@ class Grid:
             self.update_steam(x,y)
         elif self.get_cell(x,y).type== 'lava':
             self.update_lava(x,y)
-        if y+1<self.height and self.cell[y][x].lifetime>60:
+        if y+1<self.height and self.cell[y][x].lifetime>10:
             if self.get_cell(x,y).density>self.get_cell(x,y+1).density:
                 self.swap((x,y),(x,y+1))
                                
