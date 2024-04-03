@@ -1,7 +1,7 @@
 import pygame
 import random
 
-# Setting up colorss
+# Setting up colors
 white = (255, 255, 255)
 black = (0, 0, 0)
 sand_color = (209, 175, 25)
@@ -18,12 +18,15 @@ pygame.display.set_caption('Simulation')
 
             
 def vary_color(color):
+    if color == black:
+        return black
     r, g, b = color
     # Varying each RGB component
     new_r = r
     new_g = min(max(g + random.randint(-50, 0), 0), 255)
     new_b = min(max(b + random.randint(-20, 20), 0), 255)
     return (new_r, new_g, new_b)  # Returning the modified color tuple
+
 
 density=dict() 
 density['sand']=5
@@ -120,15 +123,17 @@ class Grid:
                 self.swap((x,y),(x+1,y+1))
     
     def update_water(self,x,y):
+        mylist = [0,1]
+        a = random. choice(mylist)
         if (y!=self.height-1) and (x!=0) and (x!=self.width-1):
             below = self.get_cell(x,y+1)
             right = self.get_cell(x+1,y)
             left = self.get_cell(x-1,y)
-            if below.color==black:
+            if below.type == 'void':
                 self.swap((x,y),(x,y+1))
-            elif left.color==black:
+            elif left.type == 'void' and a==0:
                 self.swap((x,y),(x-1,y))
-            elif right.color==black:
+            elif right.type == 'void' and a==1:
                 self.swap((x,y),(x+1,y))
                 
     def update_steam(self,x,y):
@@ -149,7 +154,7 @@ class Grid:
                     self.swap((x,y),(x+1,y))
                 
     def update_fire(self,x,y):
-        if(y!=self.height-1) and (x!=0) and (x!=self.width-1):
+        if(y!=self.height-1) and (x!=0) and (x!=self.width-1) and (y!=0):
             cell=self.get_cell(x,y)
             fireside=cell.lastvel
             secside=-fireside
@@ -160,6 +165,7 @@ class Grid:
             else:
                 if self.get_cell(moves[0][0],moves[0][1]).type=='void':
                     self.swap((x,y),moves[0])
+    
     def update_lava(self,x,y):
         mylist = [0,1]
         a = random. choice(mylist)
@@ -167,6 +173,7 @@ class Grid:
             below = self.get_cell(x,y+1)
             right = self.get_cell(x+1,y)
             left = self.get_cell(x-1,y)
+            top = left = self.get_cell(x,y-1)
             if below.type == 'void':
                 self.swap((x,y),(x,y+1))
             elif left.type == 'void' and a==0:
@@ -202,7 +209,7 @@ class Grid:
 
 
 def main():
-    grid_obj = Grid(50,50,W//50)
+    grid_obj = Grid(100,100,W//100)
     run = True
     clock = pygame.time.Clock()
     brush = None
@@ -214,6 +221,7 @@ def main():
         grid_obj.draw_grid()
         pygame.display.update()
         grid_obj.update_grid()
+        grid_obj.clear_flags()
         
         pressed = pygame.key.get_pressed()
         if pressed[pygame.K_w]: draw_type = 'water'
