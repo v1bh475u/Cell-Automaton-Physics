@@ -53,7 +53,7 @@ while running:
         
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            run = False
+            running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:  # Left mouse button
                 brush = event.pos
@@ -67,7 +67,6 @@ while running:
                 grid_obj.handle_mouse_click(*brush,draw_type)
         for platform in platforms:
             if player.rect.height+player.rect.top>=platform.top:
-                print("Hi")
                 player.land_on_platform(platform)
                 break
     # Update the display

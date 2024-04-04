@@ -78,7 +78,7 @@ class Grid:
         self.width = width
         self.height = height
         self.cell_size = cell_size
-        self.cell = [[Cell('void',black)] * width for _ in range(height)]
+        self.cell = [[Cell('void',black)] * width for _ in range(height-height//4)].extend([[Cell('rock',rock_color)] * width for _ in range(height//4)])
 
     def clear(self):
         self.cell = [[Cell('void',black)] * self.width for _ in range(self.height)]

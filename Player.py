@@ -50,7 +50,6 @@ class Player:
             self.y += self.speed
         
         if self.is_jumping:
-            print("Jump?")
             self.y -= self.y_vel
             self.y_vel -= self.gravity
             if self.y_vel < -self.jump_height:
@@ -69,7 +68,6 @@ class Player:
         self.y -= 2  # Adjust the player's vertical position while floating
 
     def land_on_platform(self, platform):
-        print("Alert")
         self.y = platform.top - self.height# Align the player's bottom with the platform's top
         self.is_jumping=False
         self.y_vel = self.jump_height  # Reset jump force when landing on the platform
