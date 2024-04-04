@@ -50,9 +50,6 @@ class Cell:
         self.lifetime=lifetime
         self.lastvel= 1 if random.random()%2==1 else -1
         self.density=density[type]
-    def update_color(self):
-        if type=='sand':
-            color = vary_color(sand_color)
 
 def color_mapper(type):
     if type=='void':
@@ -269,12 +266,15 @@ class Grid:
     
     def draw_platform(self,screen,level=1):
         if level==1:
-            for y in range(self.height//4*3,self.height):
-                for x in range(0,self.width):
-                    pygame.draw.rect(screen, vary_color(rock_color), pygame.Rect(x * self.cell_size, y * self.cell_size, self.cell_size, self.cell_size))
+            pygame.draw.rect(screen, vary_color(rock_color), pygame.Rect((0)* self.cell_size, (self.height//4*3)* self.cell_size, self.cell_size*(self.width), self.cell_size*(self.height//4)))
         elif level==2 or level==3:
-            for y in range(self.height//4*3,self.height):
-                for x in range(0,self.width//8):
-                    pygame.draw.rect(screen, vary_color(rock_color), pygame.Rect(x * self.cell_size, y * self.cell_size, self.cell_size, self.cell_size))
-                for x in range(self.width//4,self.width):
-                    pygame.draw.rect(screen, vary_color(rock_color), pygame.Rect(x * self.cell_size, y * self.cell_size, self.cell_size, self.cell_size))
+            pygame.draw.rect(screen, vary_color(rock_color), pygame.Rect((0)* self.cell_size, (self.height//4*3) * self.cell_size, self.cell_size*(self.width//8), self.cell_size*(self.height//4)))
+            pygame.draw.rect(screen, vary_color(rock_color), pygame.Rect((self.width//4) * self.cell_size, (self.height//4*3) * self.cell_size, self.cell_size*(self.width//4*3), self.cell_size*(self.height//4)))
+    def get_platform(self,level=1):
+        platforms=[]
+        if level==1:     
+            platforms.append(pygame.Rect((0)* self.cell_size, (self.height//4*3)* self.cell_size, self.cell_size*(self.width), self.cell_size*(self.height//4)))
+        elif level==2 or level==3:
+            platforms.append(pygame.Rect((0)* self.cell_size, (self.height//4*3) * self.cell_size, self.cell_size*(self.width//8), self.cell_size*(self.height//4)))
+            platforms.append(pygame.Rect((self.width//4) * self.cell_size, (self.height//4*3) * self.cell_size, self.cell_size*(self.width//4*3), self.cell_size*(self.height//4)))
+        return platforms

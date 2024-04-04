@@ -1,5 +1,4 @@
 import pygame
-import sys
 from ground import *
 from Player import Player
 # Initialize Pygame
@@ -13,23 +12,23 @@ pygame.display.set_caption("Rectangle Player")
 # Define colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-player = Player(WIDTH // 2, HEIGHT // 2, 50, 50)
 
 running = True
-grid_obj = Grid(W//4,H//10,W//100)
+grid_obj = Grid(WIDTH//4,HEIGHT//10,WIDTH//100)
+player = Player(0, 0, 50, 50)
 clock = pygame.time.Clock()
 brush = None
 draw_type = 'fire'
 WIN.fill(black)
 level=1
+grid_obj.draw_object('wood','tree.txt')
 while running:
     clock.tick(60)
     grid_obj.draw_grid()
-    grid_obj.update_grid()
     grid_obj.draw_platform(WIN,level)
-    if level==1:
-        grid_obj.draw_object('wood','tree.txt')
-    
+    grid_obj.update_grid()
+    platforms=grid_obj.get_platform(level)
+    player.draw(WIN,WHITE)
     pygame.display.update()
     grid_obj.clear_flags()
     
@@ -45,8 +44,9 @@ while running:
     player.move(keys, WIDTH, HEIGHT)
 
     # Check if player is floating on water
-    # if player.rect.colliderect(water_surface):
-    #     player.float_on_water()
+    if level==3:
+        if player.rect.colliderect(water_surface):
+            player.float_on_water()
         
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -74,4 +74,3 @@ while running:
 
 # Quit Pygame
 pygame.quit()
-sys.exit()

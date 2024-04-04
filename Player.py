@@ -8,7 +8,7 @@ class Player:
         self.height = height
         self.speed = 5
         self.jump_force = 10
-        self.gravity = 0.5
+        self.gravity = 1
         self.is_jumping = False
         self.rect = pygame.Rect(x, y, width, height)
 
@@ -18,9 +18,10 @@ class Player:
         if keys[pygame.K_RIGHT]:
             self.x += self.speed
 
-        if keys[pygame.K_SPACE] and not self.is_jumping:
+        if keys[pygame.K_UP] and not self.is_jumping:
             self.is_jumping = True
-
+        if keys[pygame.K_DOWN]:
+            self.y += self.speed
         if self.is_jumping:
             self.y -= self.jump_force
             self.jump_force -= self.gravity
