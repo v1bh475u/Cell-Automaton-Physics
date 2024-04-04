@@ -117,7 +117,6 @@ class Grid:
         if 0 <= grid_x < self.width and 0 <= grid_y < self.height:
             self.set(grid_x, grid_y, type)
     
-    
     def update_oil(self,x,y):
         mylist = [0,1]
         a = random. choice(mylist)
@@ -143,6 +142,7 @@ class Grid:
                 self.swap((x,y),(x-1,y+1))
             elif below_right.color==black:
                 self.swap((x,y),(x+1,y+1))
+                
     def update_water(self,x,y):
         mylist = [0,1]
         a = random. choice(mylist)
@@ -234,14 +234,7 @@ class Grid:
                         self.set(*hb_coords[i], 'fire')
                     elif hitbox[i].type == 'oil':
                         self.set(*hb_coords[i], 'fire')
-
-                
-                
-                
-                
-                
-
-            
+                        
     def update_pixel(self,x,y):
         self.cell[y][x].lifetime+=1
         if self.get_cell(x,y).dirty_flag == True:

@@ -1,6 +1,6 @@
 import pygame
 import random
-import math
+
 # Setting up colors
 white = (255, 255, 255)
 black = (0, 0, 0)
@@ -118,7 +118,7 @@ class Grid:
     def update_oil(self,x,y):
         mylist = [0,1]
         a = random. choice(mylist)
-        if (y!=self.height-1) and (x!=0) and (x!=self.width-1):
+        if (y<self.height) and (x>-1) and (x<self.width) and (y>-1):
             below = self.get_cell(x,y+1)
             right = self.get_cell(x+1,y)
             left = self.get_cell(x-1,y)
@@ -130,7 +130,7 @@ class Grid:
                 self.swap((x,y),(x+1,y))
             
     def update_sand(self,x,y):
-        if (y!=self.height-1) and (x!=0) and (x!=self.width-1):
+        if (y<self.height) and (x>-1) and (x<self.width) and (y>-1):
             below = self.get_cell(x,y+1)
             below_right = self.get_cell(x+1,y+1)
             below_left = self.get_cell(x-1,y+1)
@@ -143,7 +143,7 @@ class Grid:
     def update_water(self,x,y):
         mylist = [0,1]
         a = random. choice(mylist)
-        if (y!=self.height-1) and (x!=0) and (x!=self.width-1):
+        if (y<self.height) and (x>-1) and (x<self.width) and (y>-1):
             below = self.get_cell(x,y+1)
             right = self.get_cell(x+1,y)
             left = self.get_cell(x-1,y)
@@ -157,7 +157,7 @@ class Grid:
     def update_steam(self,x,y):
         mylist = [0,1]
         a = random. choice(mylist)
-        if (y!=self.height-1) and (x!=0) and (x!=self.width-1) and(y!=0):
+        if (y<self.height) and (x>-1) and (x<self.width) and (y>-1):
             if self.get_cell(x,y).lifetime>=50:
                 self.set(x,y,'void',0)
             else:
@@ -176,7 +176,7 @@ class Grid:
                     self.swap((x,y),(x+1,y))
                 
     def update_fire(self,x,y):
-        if(y!=self.height-1) and (x!=0) and (x!=self.width-1) and (y!=0):
+        if (y<self.height) and (x>-1) and (x<self.width) and (y>-1):
             cell=self.get_cell(x,y)
             fireside=cell.lastvel
             secside=-fireside
@@ -199,8 +199,8 @@ class Grid:
     def update_lava(self,x,y):
         mylist = [0,1]
         a = random. choice(mylist)
-        if (y!=self.height-1) and (x!=0) and (x!=self.width-1):
-            if self.get_cell(x,y).lifetime >= 500:
+        if (y<self.height) and (x>-1) and (x<self.width) and (y>-1):
+            if self.get_cell(x,y).lifetime >= 100:
                 self.set(x,y,'rock')
             else:
                 below = self.get_cell(x,y+1)
@@ -278,50 +278,3 @@ class Grid:
                     pygame.draw.rect(screen, vary_color(rock_color), pygame.Rect(x * self.cell_size, y * self.cell_size, self.cell_size, self.cell_size))
                 for x in range(self.width//4,self.width):
                     pygame.draw.rect(screen, vary_color(rock_color), pygame.Rect(x * self.cell_size, y * self.cell_size, self.cell_size, self.cell_size))
-def main():
-    grid_obj = Grid(W//4,H//10,W//100)
-    run = True
-    clock = pygame.time.Clock()
-    brush = None
-    draw_type = 'fire'
-    WIN.fill(black)
-    level=2
-    while run:
-        clock.tick(60)
-        grid_obj.draw_grid()
-        grid_obj.update_grid()
-        grid_obj.draw_platform(WIN,level)
-        if level==1:
-            grid_obj.draw_object('wood','tree.txt')
-        
-        pygame.display.update()
-        grid_obj.clear_flags()
-        
-        pressed = pygame.key.get_pressed()
-        if pressed[pygame.K_w]: draw_type = 'water'
-        if pressed[pygame.K_s]: draw_type = 'sand'
-        if pressed[pygame.K_q]: draw_type = 'wood'
-        if pressed[pygame.K_f]: draw_type = 'fire'
-        if pressed[pygame.K_r]: draw_type = 'steam'
-        if pressed[pygame.K_t]: draw_type = 'lava'
-        if pressed[pygame.K_o]: draw_type = 'oil'
-        if pressed[pygame.K_p]: draw_type = 'rock'
-        if pressed[pygame.K_c]: draw_type = 'void'
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:  # Left mouse button
-                    brush = event.pos
-                    grid_obj.handle_mouse_click(*brush,draw_type)
-            elif event.type == pygame.MOUSEBUTTONUP:
-                if event.button == 1: # left button released
-                    brush = None
-            elif event.type == pygame.MOUSEMOTION:
-                if brush: # left button still pressed
-                    brush = event.pos
-                    grid_obj.handle_mouse_click(*brush,draw_type)
-
-if __name__ == "__main__":
-    main()
