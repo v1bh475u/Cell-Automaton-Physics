@@ -1,6 +1,6 @@
 import pygame
 import random
-import math
+
 # Setting up colors
 white = (255, 255, 255)
 black = (0, 0, 0)
@@ -50,9 +50,6 @@ class Cell:
         self.lifetime=lifetime
         self.lastvel= 1 if random.random()%2==1 else -1
         self.density=density[type]
-    def update_color(self):
-        if type=='sand':
-            color = vary_color(sand_color)
 
 def color_mapper(type):
     if type=='void':
@@ -101,7 +98,11 @@ class Grid:
         
     def get_cell(self, x, y):
         return self.cell[y][x]
-
+    def handle_mouse_click(self, x, y, type):
+        grid_x = x // self.cell_size
+        grid_y = y // self.cell_size
+        if 0 <= grid_x < self.width and 0 <= grid_y < self.height:
+            self.set(grid_x, grid_y, type)
     def draw_grid(self):
         for y in range(self.height):
             for x in range(self.width):
@@ -110,17 +111,11 @@ class Grid:
                 rect = pygame.Rect(x * self.cell_size, y * self.cell_size, self.cell_size, self.cell_size)
                 pygame.draw.rect(WIN, color, rect)
                 # pygame.draw.rect(WIN, black, rect, 1)
-
-    def handle_mouse_click(self, x, y, type):
-        grid_x = x // self.cell_size
-        grid_y = y // self.cell_size
-        if 0 <= grid_x < self.width and 0 <= grid_y < self.height:
-            self.set(grid_x, grid_y, type)
     
     def update_oil(self,x,y):
         mylist = [0,1]
         a = random. choice(mylist)
-        if (y!=self.height-1) and (x!=0) and (x!=self.width-1):
+        if (y<self.height) and (x>-1) and (x<self.width) and (y>-1):
             below = self.get_cell(x,y+1)
             right = self.get_cell(x+1,y)
             left = self.get_cell(x-1,y)
@@ -132,7 +127,7 @@ class Grid:
                 self.swap((x,y),(x+1,y))
             
     def update_sand(self,x,y):
-        if (y!=self.height-1) and (x!=0) and (x!=self.width-1):
+        if (y<self.height) and (x>-1) and (x<self.width) and (y>-1):
             below = self.get_cell(x,y+1)
             below_right = self.get_cell(x+1,y+1)
             below_left = self.get_cell(x-1,y+1)
@@ -142,11 +137,10 @@ class Grid:
                 self.swap((x,y),(x-1,y+1))
             elif below_right.color==black:
                 self.swap((x,y),(x+1,y+1))
-                
     def update_water(self,x,y):
         mylist = [0,1]
         a = random. choice(mylist)
-        if (y!=self.height-1) and (x!=0) and (x!=self.width-1):
+        if (y<self.height) and (x>-1) and (x<self.width) and (y>-1):
             below = self.get_cell(x,y+1)
             right = self.get_cell(x+1,y)
             left = self.get_cell(x-1,y)
@@ -160,7 +154,7 @@ class Grid:
     def update_steam(self,x,y):
         mylist = [0,1]
         a = random. choice(mylist)
-        if (y!=self.height-1) and (x!=0) and (x!=self.width-1) and(y!=0):
+        if (y<self.height) and (x>-1) and (x<self.width) and (y>-1):
             if self.get_cell(x,y).lifetime>=50:
                 self.set(x,y,'void',0)
             else:
@@ -179,7 +173,7 @@ class Grid:
                     self.swap((x,y),(x+1,y))
                 
     def update_fire(self,x,y):
-        if(y!=self.height-1) and (x!=0) and (x!=self.width-1) and (y!=0):
+        if (y<self.height) and (x>-1) and (x<self.width) and (y>-1):
             cell=self.get_cell(x,y)
             fireside=cell.lastvel
             secside=-fireside
@@ -202,8 +196,8 @@ class Grid:
     def update_lava(self,x,y):
         mylist = [0,1]
         a = random. choice(mylist)
-        if (y!=self.height-1) and (x!=0) and (x!=self.width-1):
-            if self.get_cell(x,y).lifetime >= 500:
+        if (y<self.height) and (x>-1) and (x<self.width) and (y>-1):
+            if self.get_cell(x,y).lifetime >= 100:
                 self.set(x,y,'rock')
             else:
                 below = self.get_cell(x,y+1)
@@ -233,8 +227,7 @@ class Grid:
                     elif hitbox[i].type == 'wood':
                         self.set(*hb_coords[i], 'fire')
                     elif hitbox[i].type == 'oil':
-                        self.set(*hb_coords[i], 'fire')
-                        
+                        self.set(*hb_coords[i], 'fire')            
     def update_pixel(self,x,y):
         self.cell[y][x].lifetime+=1
         if self.get_cell(x,y).dirty_flag == True:
@@ -253,58 +246,35 @@ class Grid:
             if y+1<self.height and self.cell[y][x].lifetime>10:
                 if self.get_cell(x,y).density>self.get_cell(x,y+1).density and self.get_cell(x,y).type!='rock' and self.get_cell(x,y).type!='wood':
                     self.swap((x,y),(x,y+1))
-                               
+    
     def update_grid(self):
         for y in range(self.height-1):
             for x in range(self.width-1):
                 self.update_pixel(x,y)
-    
+                
     def clear_flags(self):
         for y in range(self.height):
             for x in range(self.width):
                 self.get_cell(x,y).dirty_flag = True
-
-
-def main():
-    grid_obj = Grid(W//4,H//10,W//100)
-    run = True
-    clock = pygame.time.Clock()
-    brush = None
-    draw_type = 'fire'
-
-    while run:
-        clock.tick(60)
-        WIN.fill(black)
-        grid_obj.draw_grid()
-        pygame.display.update()
-        grid_obj.update_grid()
-        grid_obj.clear_flags()
-        
-        pressed = pygame.key.get_pressed()
-        if pressed[pygame.K_w]: draw_type = 'water'
-        if pressed[pygame.K_s]: draw_type = 'sand'
-        if pressed[pygame.K_q]: draw_type = 'wood'
-        if pressed[pygame.K_f]: draw_type = 'fire'
-        if pressed[pygame.K_r]: draw_type = 'steam'
-        if pressed[pygame.K_t]: draw_type = 'lava'
-        if pressed[pygame.K_o]: draw_type = 'oil'
-        if pressed[pygame.K_p]: draw_type = 'rock'
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:  # Left mouse button
-                    brush = event.pos
-                    grid_obj.handle_mouse_click(*brush,draw_type)
-            elif event.type == pygame.MOUSEBUTTONUP:
-                if event.button == 1: # left button released
-                    brush = None
-            elif event.type == pygame.MOUSEMOTION:
-                if brush: # left button still pressed
-                    brush = event.pos
-                    grid_obj.handle_mouse_click(*brush,draw_type)
-    pygame.quit()
-
-if __name__ == "__main__":
-    main()
+                
+    def draw_object(self,type,file):
+        f=open(file,'r')
+        coords=f.readlines()
+        for coord in coords:
+            x,y=coord.split(',')
+            self.set(int(x[1:])//self.cell_size,int(y[:-2])//self.cell_size,type)
+    
+    def draw_platform(self,screen,level=1):
+        if level==1:
+            pygame.draw.rect(screen, vary_color(rock_color), pygame.Rect((0)* self.cell_size, (self.height//4*3)* self.cell_size, self.cell_size*(self.width), self.cell_size*(self.height//4)))
+        elif level==2 or level==3:
+            pygame.draw.rect(screen, vary_color(rock_color), pygame.Rect((0)* self.cell_size, (self.height//4*3) * self.cell_size, self.cell_size*(self.width//8), self.cell_size*(self.height//4)))
+            pygame.draw.rect(screen, vary_color(rock_color), pygame.Rect((self.width//4) * self.cell_size, (self.height//4*3) * self.cell_size, self.cell_size*(self.width//4*3), self.cell_size*(self.height//4)))
+    def get_platform(self,level=1):
+        platforms=[]
+        if level==1:     
+            platforms.append(pygame.Rect((0)* self.cell_size, (self.height//4*3)* self.cell_size, self.cell_size*(self.width), self.cell_size*(self.height//4)))
+        elif level==2 or level==3:
+            platforms.append(pygame.Rect((0)* self.cell_size, (self.height//4*3) * self.cell_size, self.cell_size*(self.width//8), self.cell_size*(self.height//4)))
+            platforms.append(pygame.Rect((self.width//4) * self.cell_size, (self.height//4*3) * self.cell_size, self.cell_size*(self.width//4*3), self.cell_size*(self.height//4)))
+        return platforms
