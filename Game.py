@@ -1,6 +1,6 @@
 import pygame
 from ground import *
-from Player import Player
+from PlayerWithSprite import Player
 # Initialize Pygame
 pygame.init()
 
