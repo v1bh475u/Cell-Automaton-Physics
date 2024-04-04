@@ -129,47 +129,46 @@ class Grid:
             self.insertCell(grid_x, grid_y, type)
     
     def update_oil(self,x,y):
-        mylist = [0,1]
-        a = random. choice(mylist)
-        if (y!=self.height-1) and (x!=0) and (x!=self.width-1):
+        if (y<self.height) and (x>0) and (x<self.width) and (y>0):
+            cell=self.get_cell(x,y)
             below = self.get_cell(x,y+1)
             right = self.get_cell(x+1,y)
             left = self.get_cell(x-1,y)
-            if below.type =='void':
-                self.swap((x,y),(x,y+1))
-            elif (left.type == 'void' or left.type=='oil') and a==0:
-                self.swap((x,y),(x-1,y))
-            elif (right.type == 'void' or right.type=='oil') and a==1:
-                self.swap((x,y),(x+1,y))
+            if below==None:
+                self.movecell(x,y+1,cell)
+            elif (left==None) and cell.lastvel==-1:
+                self.movecell(x-1,y,cell)
+            elif (right==None) and cell.lastvel==1:
+                self.movecell(x+1,y,cell)
             
     def update_sand(self,x,y):
-        if (y!=self.height-1) and (x!=0) and (x!=self.width-1):
+        if (y<self.height) and (x>0) and (x<self.width) and (y>0):
+            cell=self.get_cell(x,y)
             below = self.get_cell(x,y+1)
             below_right = self.get_cell(x+1,y+1)
             below_left = self.get_cell(x-1,y+1)
-            if below.color==black:
-                self.swap((x,y),(x,y+1))
-            elif below_left.color==black:
-                self.swap((x,y),(x-1,y+1))
-            elif below_right.color==black:
-                self.swap((x,y),(x+1,y+1))
+            if below==None:
+                self.movecell(x,y+1,cell)
+            elif below_left==None:
+                self.movecell(x-1,y+1,cell)
+            elif below_right==None:
+                self.movecell(x+1,y+1,cell)
                 
     def update_water(self,x,y):
-        mylist = [0,1]
-        a = random. choice(mylist)
-        if (y!=self.height-1) and (x!=0) and (x!=self.width-1):
+        if (y<self.height) and (x>0) and (x<self.width) and (y>0):
+            cell=self.get_cell(x,y)
             below = self.get_cell(x,y+1)
             right = self.get_cell(x+1,y)
             left = self.get_cell(x-1,y)
-            if below.type =='void':
-                self.swap((x,y),(x,y+1))
-            elif (left.type == 'void' or left.type=='oil') and a==0:
-                self.swap((x,y),(x-1,y))
-            elif (right.type == 'void' or right.type=='oil') and a==1:
-                self.swap((x,y),(x+1,y))
+            if below==None or below.type=='oil':
+                self.movecell(x,y+1,cell)
+            elif (left==None or left.type=='oil') and cell.lastvel==-1:
+                self.movecell(x-1,y,cell)
+            elif (right==None or right.type=='oil') and cell.lastvel==1:
+                self.movecell(x+1,y,cell)
                 
     def update_steam(self,x,y):
-        if (y!=self.height-1) and (x!=0) and (x!=self.width-1) and(y!=0):
+        if (y<self.height) and (x>0) and (x<self.width) and (y>0):
             if self.get_cell(x,y).lifetime>=50:
                 self.delCell(x,y)
             else:
@@ -186,7 +185,7 @@ class Grid:
                         break
                 
     def update_fire(self,x,y):
-        if(y!=self.height-1) and (x!=0) and (x!=self.width-1) and (y!=0):
+        if (y<self.height) and (x>0) and (x<self.width) and (y>0):
             cell=self.get_cell(x,y)
             if cell.lifetime>=20:
                 cell.type='steam'
@@ -211,54 +210,47 @@ class Grid:
                     break      
 
     def update_lava(self,x,y):
-        mylist = [0,1]
-        a = random. choice(mylist)
-        if (y!=self.height-1) and (x!=0) and (x!=self.width-1):
-            if self.get_cell(x,y).lifetime >= 500:
-                self.set(x,y,'rock')
+        if (y<self.height) and (x>0) and (x<self.width) and (y>0):
+            cell=self.get_cell(x,y)
+            if cell.lifetime >= 500:
+                cell.type = 'rock'
+                cell.lifetime = 0
             else:
                 below = self.get_cell(x,y+1)
                 right = self.get_cell(x+1,y)
-                left = self.get_cell(x-1,y)
-                top = self.get_cell(x,y-1)
-                if below.type == 'void':
-                    self.swap((x,y),(x,y+1))
-                elif left.type == 'void' and a==0:
-                    self.swap((x,y),(x-1,y))
-                elif right.type == 'void' and a==1:
-                    self.swap((x,y),(x+1,y))
-                    
-                top = self.get_cell(x,y-1)
-                top_left = self.get_cell(x-1, y-1)
-                top_right = self.get_cell(x+1, y-1)
-                left = self.get_cell(x-1, y)
-                right = self.get_cell(x+1, y)
-                bottom_left = self.get_cell(x-1, y+1)
-                bottom_right = self.get_cell(x+1, y+1)
-                hitbox = [top, top_left, top_right, left, right, below, bottom_left, bottom_right]
+                left = self.get_cell(x-1,y)    
                 hb_coords = [(x, y-1), (x+1, y-1), (x+1, y-1), (x-1, y), (x+1, y), (x,y+1), (x-1, y+1), (x+1, y+1)]
-                for i in range(len(hitbox)):
-                    if hitbox[i].type == 'water':
-                        self.set(hb_coords[i][0],hb_coords[i][1], 'rock')
-                        self.set(x,y, 'steam')
-                    elif hitbox[i].type == 'wood':
-                        self.set(hb_coords[i][0],hb_coords[i][1], 'fire')
-                    elif hitbox[i].type == 'oil':
-                        self.set(hb_coords[i][0],hb_coords[i][1], 'fire')
+                for i in range(len(hb_coords)):
+                    dest=self.get_cell(hb_coords[i][0],hb_coords[i][1])
+                    if dest:
+                        if dest[i].type == 'water':
+                            self.set(hb_coords[i][0],hb_coords[i][1], 'rock')
+                            self.set(x,y, 'steam')
+                        elif dest[i].type == 'wood':
+                            self.set(hb_coords[i][0],hb_coords[i][1], 'fire')
+                        elif dest[i].type == 'oil':
+                            self.set(hb_coords[i][0],hb_coords[i][1], 'fire')
+                    else:
+                        if below==None:
+                            self.movecell(x,y+1,cell)
+                        elif left==None and cell.lastvel==-1:
+                            self.movecell(x-1,y,cell)
+                        elif right==None and cell.lastvel==1:
+                            self.movecell(x+1,y,cell)
             
     def update_pixel(self,x,y):
         self.cells.get((x,y)).lifetime+=1
         if self.get_cell(x,y).dirty_flag == True:
             if self.get_cell(x,y).type=='sand':
                 self.update_sand(x,y)
-            elif self.get_cell(x,y).type=='water':
+            elif self.get_cell(x,y).type=='lava':
                 self.update_water(x,y)
             elif self.get_cell(x,y).type=='fire':
                 self.update_fire(x,y)
             elif self.get_cell(x,y).type== 'steam':
                 self.update_steam(x,y)
-            elif self.get_cell(x,y).type== 'lava':
-                self.update_lava(x,y)
+            elif self.get_cell(x,y).type== 'water':
+                self.update_water(x,y)
             elif self.get_cell(x,y).type == 'oil':
                 self.update_oil(x,y)
             
