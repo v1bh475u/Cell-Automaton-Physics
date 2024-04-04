@@ -101,7 +101,11 @@ class Grid:
         
     def get_cell(self, x, y):
         return self.cell[y][x]
-
+    def handle_mouse_click(self, x, y, type):
+        grid_x = x // self.cell_size
+        grid_y = y // self.cell_size
+        if 0 <= grid_x < self.width and 0 <= grid_y < self.height:
+            self.set(grid_x, grid_y, type)
     def draw_grid(self):
         for y in range(self.height):
             for x in range(self.width):
@@ -110,13 +114,6 @@ class Grid:
                 rect = pygame.Rect(x * self.cell_size, y * self.cell_size, self.cell_size, self.cell_size)
                 pygame.draw.rect(WIN, color, rect)
                 # pygame.draw.rect(WIN, black, rect, 1)
-
-    def handle_mouse_click(self, x, y, type):
-        grid_x = x // self.cell_size
-        grid_y = y // self.cell_size
-        if 0 <= grid_x < self.width and 0 <= grid_y < self.height:
-            self.set(grid_x, grid_y, type)
-    
     
     def update_oil(self,x,y):
         mylist = [0,1]
@@ -233,15 +230,7 @@ class Grid:
                     elif hitbox[i].type == 'wood':
                         self.set(*hb_coords[i], 'fire')
                     elif hitbox[i].type == 'oil':
-                        self.set(*hb_coords[i], 'fire')
-
-                
-                
-                
-                
-                
-
-            
+                        self.set(*hb_coords[i], 'fire')            
     def update_pixel(self,x,y):
         self.cell[y][x].lifetime+=1
         if self.get_cell(x,y).dirty_flag == True:
@@ -260,31 +249,52 @@ class Grid:
             if y+1<self.height and self.cell[y][x].lifetime>10:
                 if self.get_cell(x,y).density>self.get_cell(x,y+1).density and self.get_cell(x,y).type!='rock' and self.get_cell(x,y).type!='wood':
                     self.swap((x,y),(x,y+1))
-                               
+    
     def update_grid(self):
         for y in range(self.height-1):
             for x in range(self.width-1):
                 self.update_pixel(x,y)
-    
+                
     def clear_flags(self):
         for y in range(self.height):
             for x in range(self.width):
                 self.get_cell(x,y).dirty_flag = True
-
-
+                
+    def draw_object(self,type,file):
+        f=open(file,'r')
+        coords=f.readlines()
+        for coord in coords:
+            x,y=coord.split(',')
+            self.set(int(x[1:])//self.cell_size,int(y[:-2])//self.cell_size,type)
+    
+    def draw_platform(self,screen,level=1):
+        if level==1:
+            for y in range(self.height//4*3,self.height):
+                for x in range(0,self.width):
+                    pygame.draw.rect(screen, vary_color(rock_color), pygame.Rect(x * self.cell_size, y * self.cell_size, self.cell_size, self.cell_size))
+        elif level==2 or level==3:
+            for y in range(self.height//4*3,self.height):
+                for x in range(0,self.width//8):
+                    pygame.draw.rect(screen, vary_color(rock_color), pygame.Rect(x * self.cell_size, y * self.cell_size, self.cell_size, self.cell_size))
+                for x in range(self.width//4,self.width):
+                    pygame.draw.rect(screen, vary_color(rock_color), pygame.Rect(x * self.cell_size, y * self.cell_size, self.cell_size, self.cell_size))
 def main():
     grid_obj = Grid(W//4,H//10,W//100)
     run = True
     clock = pygame.time.Clock()
     brush = None
     draw_type = 'fire'
-
+    WIN.fill(black)
+    level=2
     while run:
         clock.tick(60)
-        WIN.fill(black)
         grid_obj.draw_grid()
-        pygame.display.update()
         grid_obj.update_grid()
+        grid_obj.draw_platform(WIN,level)
+        if level==1:
+            grid_obj.draw_object('wood','tree.txt')
+        
+        pygame.display.update()
         grid_obj.clear_flags()
         
         pressed = pygame.key.get_pressed()
@@ -296,6 +306,7 @@ def main():
         if pressed[pygame.K_t]: draw_type = 'lava'
         if pressed[pygame.K_o]: draw_type = 'oil'
         if pressed[pygame.K_p]: draw_type = 'rock'
+        if pressed[pygame.K_c]: draw_type = 'void'
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -311,7 +322,6 @@ def main():
                 if brush: # left button still pressed
                     brush = event.pos
                     grid_obj.handle_mouse_click(*brush,draw_type)
-    pygame.quit()
 
 if __name__ == "__main__":
     main()
