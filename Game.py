@@ -22,12 +22,15 @@ draw_type = 'fire'
 WIN.fill(black)
 level=1
 grid_obj.draw_object('wood','tree.txt')
+platforms=grid_obj.get_platform(level)
 while running:
+    for platform in platforms:
+        if player.y+player.height==platform.top:
+            player.on_ground=True
     clock.tick(60)
     grid_obj.draw_grid()
     grid_obj.draw_platform(WIN,level)
     grid_obj.update_grid()
-    platforms=grid_obj.get_platform(level)
     player.draw(WIN,WHITE)
     pygame.display.update()
     grid_obj.clear_flags()
@@ -41,7 +44,7 @@ while running:
     if keys[pygame.K_t]: draw_type = 'lava'
     if keys[pygame.K_o]: draw_type = 'oil'
     if keys[pygame.K_p]: draw_type = 'rock'
-    player.move(keys, WIDTH, HEIGHT)
+    player.move(keys, WIDTH, HEIGHT,grid_obj)
 
     # Check if player is floating on water
     if level==3:
@@ -63,7 +66,8 @@ while running:
                 brush = event.pos
                 grid_obj.handle_mouse_click(*brush,draw_type)
         for platform in platforms:
-            if player.rect.colliderect(platform):
+            if player.rect.height+player.rect.top>=platform.top:
+                print("Hi")
                 player.land_on_platform(platform)
                 break
     # Update the display
